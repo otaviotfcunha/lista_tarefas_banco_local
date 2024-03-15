@@ -24,8 +24,7 @@ class SQLiteDataBase {
   Future<Database> iniciarBancoDeDados() async {
     var db = await openDatabase(
         path.join(await getDatabasesPath(), 'database.db'),
-        version: scripts.length,
-        onCreate: (Database db, int version) async {
+        version: scripts.length, onCreate: (Database db, int version) async {
       for (var i = 1; i <= scripts.length; i++) {
         await db.execute(scripts[i]!);
         debugPrint(scripts[i]!);

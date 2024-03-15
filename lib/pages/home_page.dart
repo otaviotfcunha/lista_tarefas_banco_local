@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:lista_tarefas_banco_local/models/tarefa.dart';
 import 'package:lista_tarefas_banco_local/repositories/repositorio2.dart';
 
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -28,10 +27,11 @@ class _HomePageState extends State<HomePage> {
 
   void _adicionarTarefa() {
     setState(() {
-      Tarefa tarefa = Tarefa(titulo: controlerTarefa.text, realizado: false);
+      Tarefa tarefa =
+          Tarefa(id: 0, titulo: controlerTarefa.text, realizado: false);
       tarefas.add(tarefa);
       controlerTarefa.text = '';
-      _repositorio.salvarLista(tarefas);
+      _repositorio.salvarUltimaTarefa(tarefa);
     });
   }
 
@@ -41,7 +41,7 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         backgroundColor: Colors.blueGrey,
         centerTitle: true,
-        title: Text(
+        title: const Text(
           "Lista de tarefas",
         ),
       ),
@@ -53,16 +53,17 @@ class _HomePageState extends State<HomePage> {
               children: [
                 Expanded(
                     child: TextField(
-                      decoration: InputDecoration(labelText: "Nova tarefa"),
-                      controller: controlerTarefa,
-                    )),
-                ElevatedButton(onPressed: _adicionarTarefa, child: Text("ADD"))
+                  decoration: const InputDecoration(labelText: "Nova tarefa"),
+                  controller: controlerTarefa,
+                )),
+                ElevatedButton(
+                    onPressed: _adicionarTarefa, child: const Text("ADD"))
               ],
             ),
           ),
-          Expanded(child: ListView.builder(
-              itemCount: tarefas.length,
-              itemBuilder: contruirListView))
+          Expanded(
+              child: ListView.builder(
+                  itemCount: tarefas.length, itemBuilder: contruirListView))
         ],
       ),
     );
@@ -70,57 +71,57 @@ class _HomePageState extends State<HomePage> {
 
   Widget contruirListView(BuildContext context, int index) {
     return Dismissible(
-        key: Key(DateTime
-            .now()
-            .microsecondsSinceEpoch
-            .toString()),
-        background: Container(
-          color: Colors.red,
-          child: Align(
-            alignment: Alignment(-0.9, 0.0),
-            child: Icon(
-              Icons.delete,
-              color: Colors.white,
-            ),
+      key: Key(DateTime.now().microsecondsSinceEpoch.toString()),
+      background: Container(
+        color: Colors.red,
+        child: const Align(
+          alignment: Alignment(-0.9, 0.0),
+          child: Icon(
+            Icons.delete,
+            color: Colors.white,
           ),
         ),
-        direction: DismissDirection.startToEnd,
-        child: CheckboxListTile(
-          title: Text(tarefas[index].titulo),
-          value: tarefas[index].realizado,
-          secondary: CircleAvatar(
-            child: Icon(tarefas[index].realizado ? Icons.check : Icons.error),
-          ),
-          onChanged: (checked) {
-            setState(() {
-              tarefas[index].realizado = checked!;
-            });
-          },
+      ),
+      direction: DismissDirection.startToEnd,
+      child: CheckboxListTile(
+        title: Text(tarefas[index].titulo),
+        value: tarefas[index].realizado,
+        secondary: CircleAvatar(
+          child: Icon(tarefas[index].realizado ? Icons.check : Icons.error),
         ),
-        onDismissed: (direction) {
+        onChanged: (checked) {
           setState(() {
-            Tarefa tarefaRemovida = tarefas[index];
-            tarefas.removeAt(index);
-            _repositorio.salvarLista(tarefas);
-            int indiceTarefaRemovida = index;
-
-            final snack = SnackBar(
-              content: Text("Tarefa ${tarefaRemovida.titulo} removida"),
-              action: SnackBarAction(
-                  label: "Desfazer",
-                  onPressed: () {
-                    setState(() {
-                      tarefas.insert(indiceTarefaRemovida, tarefaRemovida);
-                      _repositorio.salvarLista(tarefas);
-                    });
-                  }),
-              duration: Duration(seconds: 3),
-            );
-
-            ScaffoldMessenger.of(context).removeCurrentSnackBar();
-            ScaffoldMessenger.of(context).showSnackBar(snack);
+            tarefas[index].realizado = checked!;
+            _repositorio.atualizaTarefa(tarefas[index], tarefas[index].id);
           });
         },
+      ),
+      onDismissed: (direction) {
+        setState(() {
+          Tarefa tarefaRemovida = tarefas[index];
+          tarefas.removeAt(index);
+          //_repositorio.salvarLista(tarefas);
+          _repositorio.removerTarefa(tarefaRemovida.id);
+          int indiceTarefaRemovida = index;
+
+          final snack = SnackBar(
+            content: Text("Tarefa ${tarefaRemovida.titulo} removida"),
+            action: SnackBarAction(
+                label: "Desfazer",
+                onPressed: () {
+                  setState(() {
+                    tarefas.insert(indiceTarefaRemovida, tarefaRemovida);
+                    _repositorio.salvarUltimaTarefa(tarefaRemovida);
+                    //_repositorio.salvarLista(tarefas);
+                  });
+                }),
+            duration: const Duration(seconds: 3),
+          );
+
+          ScaffoldMessenger.of(context).removeCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(snack);
+        });
+      },
     );
   }
 }
